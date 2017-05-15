@@ -14,6 +14,21 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname)));
 
+var Product = mongoose.model('products', {
+  id: Number,
+  name: String,
+  description: String,
+  detailDescription: String,
+  info: String,
+  reviews: Object,
+  url: String,
+  storeId: Number,
+  price: Object,
+  duration: Object,
+  sticker: Object,
+  img: Object
+});
+
 // LISTEN
 app.listen(8888, function () {
   console.log('8888 SERVER START!!!!!');
@@ -22,12 +37,19 @@ app.listen(8888, function () {
 app.get('/', function (req, res) {
   //db에서 전체 읽어오기
   //create a 링크, 상품 리스트 read table로, delete button이랑
-  res.render('index');
+  mongoose.model('products').find(function (err, products) {
+    if (err) {
+      throw err;
+    } else {
+      res.render('index', {dealData: products});
+    }
+  })
 });
 
 //get create product form
 app.get('/create', function (req, res) {
   //create form page
+  res.render('productForm');
 });
 
 //create product
@@ -37,16 +59,23 @@ app.post('/create', function (req, res) {
     'name': req.body.name,
     'url': req.body.url,
     'price': req.body.price,
-    'tbnailImg': req.body.tbnailImg
+    'img': req.body.tbnailImg
   };
   //mongoose통해 생성된 product 넣기
+  Product.create(product, function (err, createdProd) {
+    if (err) throw err;
+    res.send(createdProd);
+  });
   //read page로 이동
-  res.redirect('/');
+  // res.redirect('/');
 });
 
 //DELETE
 app.post('/del', function (req, res) {
-
-  var deleteId = req.query.id;
+  var deleteId = req.body.id;
+  mongoose.model('products').find({id: deleteId}).remove(function (err, result) {
+    if (err) throw err;
+    res.redirect('/');
+  });
 
 });
